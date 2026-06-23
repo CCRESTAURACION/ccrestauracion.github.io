@@ -15,6 +15,13 @@ const TAB_SCREENS = {
   radio: 'screenRadio'
 };
 
+const VALID_TABS = Object.keys(TAB_SCREENS);
+
+function tabFromHash() {
+  const hash = (window.location.hash || '').replace('#', '').trim();
+  return VALID_TABS.includes(hash) ? hash : null;
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', event => {
     const menu = document.getElementById('toolbarMenu');
@@ -32,20 +39,43 @@ window.addEventListener('DOMContentLoaded', () => {
     updateDarkIcon();
   }
 
-  setTimeout(() => {
-    document.getElementById('splash').classList.add('hidden');
-    document.getElementById('app').classList.remove('hidden');
-    document.getElementById('app').classList.add('active');
-    initBrowserHistory();
-    ensureGrupoActions();
-    showTab('biblia');
-    setToolbarForRoot('biblia');
-    replaceHistoryState();
-    initBiblia();
-    initRadio();
-    initJuego();
-  }, 1800);
+  const startTab = tabFromHash() || 'biblia';
+
+  initBrowserHistory();
+  ensureGrupoActions();
+  showTab(startTab);
+  setActiveNavItem(startTab);
+  setToolbarForRoot(startTab);
+  setHashForTab(startTab, { replace: true });
+  replaceHistoryState();
+  if (startTab === 'devocional') loadDevocional();
+  if (startTab === 'juego') onJuegoTabOpened();
+  initBiblia();
+  initRadio();
+
+  window.addEventListener('hashchange', () => {
+    if (state.restoringHistory || state.suppressHashChange) return;
+    const tab = tabFromHash();
+    if (tab && tab !== state.currentTab) {
+      navTo(tab, null, { skipHistory: true, skipHash: true });
+    }
+  });
 });
+
+function setActiveNavItem(tab) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-tab="${tab}"]`)?.classList.add('active');
+}
+
+function setHashForTab(tab, options = {}) {
+  // El hash real ya queda escrito por pushHistoryState/replaceHistoryState
+  // (via urlForTab). Esta función solo cubre el caso de arranque inicial
+  // antes de que exista una entrada de historial, para no duplicar pushes.
+  if (!options.replace) return;
+  const newHash = '#' + tab;
+  if (window.location.hash === newHash) return;
+  window.history.replaceState(window.history.state, '', urlForTab(tab));
+}
 
 function toggleDarkMode() {
   state.darkMode = !state.darkMode;
@@ -235,7 +265,6 @@ function mostrarConfiguracion() {
 
 function initBrowserHistory() {
   if (!window.history?.replaceState) return;
-  window.history.replaceState(getHistorySnapshot(), '', window.location.href);
   window.addEventListener('popstate', event => {
     if (!event.state || !event.state.ccr) return;
     state.restoringHistory = true;
@@ -258,15 +287,19 @@ function getHistorySnapshot() {
   };
 }
 
+function urlForTab(tab) {
+  return window.location.pathname + window.location.search + '#' + tab;
+}
+
 function pushHistoryState() {
   if (state.restoringHistory || !window.history?.pushState) return;
-  window.history.pushState(getHistorySnapshot(), '', window.location.href);
+  window.history.pushState(getHistorySnapshot(), '', urlForTab(state.currentTab));
   state.historyDepth++;
 }
 
 function replaceHistoryState() {
   if (!window.history?.replaceState) return;
-  window.history.replaceState(getHistorySnapshot(), '', window.location.href);
+  window.history.replaceState(getHistorySnapshot(), '', urlForTab(state.currentTab));
 }
 
 function restoreHistorySnapshot(snapshot) {

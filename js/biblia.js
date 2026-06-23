@@ -41,16 +41,16 @@ const BASE_URL = (() => {
 })();
 
 async function initBiblia() {
-  await loadVersion('RVA1960');
+  await loadVersion('RVA1960', { isInitial: true });
 }
 
-async function loadVersion(versionId) {
+async function loadVersion(versionId, options = {}) {
   const version = VERSIONES.find(v => v.id === versionId) || VERSIONES[0];
   currentVersion = version.id;
   bibleData = null;
   window.bibleData = null;
   const inVersiculos = document.getElementById('screenVersiculos')?.classList.contains('active');
-  if (!inVersiculos) {
+  if (!inVersiculos && !options.isInitial) {
     document.getElementById('bibleLoading').classList.remove('hidden');
     document.getElementById('listaAntiguo').innerHTML = '';
     document.getElementById('listaNuevo').innerHTML = '';
@@ -121,16 +121,34 @@ function renderLibros() {
   const libros = bibleData.libros || [];
   const antiguoEl = document.getElementById('listaAntiguo');
   const nuevoEl = document.getElementById('listaNuevo');
-  antiguoEl.innerHTML = '';
-  nuevoEl.innerHTML = '';
 
-  libros.forEach(libro => {
-    const el = document.createElement('div');
-    el.className = 'libro-item';
-    el.innerHTML = `<span>${escapeHtml(libro.nombre)}</span>`;
-    el.onclick = () => seleccionarLibro(libro);
-    (libro.testamento === 'Antiguo' ? antiguoEl : nuevoEl).appendChild(el);
-  });
+  const porId = {};
+  libros.forEach(l => porId[l.id] = l);
+
+  const existentes = document.querySelectorAll('.libro-item[data-libro-id]');
+  let coincideTodos = existentes.length === libros.length;
+
+  if (coincideTodos) {
+    // Reutiliza el HTML ya presente (pre-renderizado) y solo conecta el evento.
+    existentes.forEach(el => {
+      const libro = porId[el.dataset.libroId];
+      if (!libro) { coincideTodos = false; return; }
+      el.onclick = () => seleccionarLibro(libro);
+    });
+  }
+
+  if (!coincideTodos) {
+    antiguoEl.innerHTML = '';
+    nuevoEl.innerHTML = '';
+    libros.forEach(libro => {
+      const el = document.createElement('div');
+      el.className = 'libro-item';
+      el.dataset.libroId = libro.id;
+      el.innerHTML = `<span>${escapeHtml(libro.nombre)}</span>`;
+      el.onclick = () => seleccionarLibro(libro);
+      (libro.testamento === 'Antiguo' ? antiguoEl : nuevoEl).appendChild(el);
+    });
+  }
 
   document.getElementById('bibleLoading').classList.add('hidden');
   document.getElementById('btnVersion').textContent = currentVersion;
