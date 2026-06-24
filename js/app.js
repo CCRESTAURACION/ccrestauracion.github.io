@@ -12,7 +12,8 @@ const TAB_SCREENS = {
   grupos: 'screenGrupos',
   devocional: 'screenDevocional',
   juego: 'screenJuego',
-  radio: 'screenRadio'
+  radio: 'screenRadio',
+  privacidad: 'screenPrivacidad'
 };
 
 const VALID_TABS = Object.keys(TAB_SCREENS);
@@ -132,12 +133,12 @@ function showTab(tab) {
     screen.classList.add('active');
   }
 
-  document.getElementById('bottomNav').style.display = 'flex';
+  document.getElementById('bottomNav').style.display = tab === 'privacidad' ? 'none' : 'flex';
   document.getElementById('fabPeticiones').classList.add('hidden');
 }
 
-function setToolbarForRoot() {
-  document.getElementById('toolbarTitle').textContent = 'CCR';
+function setToolbarForRoot(tab = state.currentTab) {
+  document.getElementById('toolbarTitle').textContent = tab === 'privacidad' ? 'Privacidad' : 'CCR';
   document.getElementById('btnBack').classList.add('hidden');
   document.getElementById('btnVersion').classList.add('hidden');
   document.body.classList.add('root-screen');
@@ -243,6 +244,11 @@ function abrirPeticionesDesdeMenu() {
 function mostrarAcercaCCR() {
   closeToolbarMenu();
   pushScreen('screenAcerca', 'Acerca de CCR');
+}
+
+function mostrarPrivacidad() {
+  closeToolbarMenu();
+  navTo('privacidad', null);
 }
 
 async function compartirApp() {

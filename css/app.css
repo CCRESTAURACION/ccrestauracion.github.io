@@ -729,6 +729,34 @@ body.dark .ranking-full-row { color: var(--text); }
 .acerca-ref { color: #99ccff; font-size: 14px !important; font-weight: 800; margin-bottom: 24px !important; }
 .acerca-version { color: rgba(255,255,255,.5); font-size: 13px !important; letter-spacing: 1px; }
 
+.privacidad-wrap { position: relative; min-height: 100%; overflow: hidden; }
+.privacidad-content {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100vh - var(--toolbar-h));
+  padding: 36px 28px 92px;
+  color: #fff;
+}
+.privacidad-content h2 {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.privacidad-content h3 {
+  font-size: 16px;
+  color: #99ccff;
+  letter-spacing: 1px;
+  margin: 22px 0 8px;
+}
+.privacidad-content p {
+  font-size: 16px;
+  line-height: 1.62;
+  margin-bottom: 12px;
+  text-align: justify;
+  text-align-last: left;
+}
+
 /* ══════════════════════════════════════════════════════
    MODAL VERSION
 ══════════════════════════════════════════════════════ */
